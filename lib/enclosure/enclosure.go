@@ -9,6 +9,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/kpetku/go-syndie/lib/common"
+	"github.com/kpetku/go-syndie/lib/syndieuri"
 )
 
 // Enclosure holds the reference to a Syndie Header and Message
@@ -46,45 +47,63 @@ func (enclosure *Enclosure) OpenFile(s string) *Enclosure {
 			for _, h := range str {
 				switch strings.Split(h, "=")[0] {
 				case "Author":
-					enclosure.Header.Author = strings.Split(h, "=")[1]
+					enclosure.Header.Author = strings.Split(h, "Author=")[1]
 				case "AuthenticationMask":
-					enclosure.Header.AuthenticationMask = strings.Split(h, "=")[1]
+					enclosure.Header.AuthenticationMask = strings.Split(h, "AuthenticationMask=")[1]
 				case "TargetChannel":
-					enclosure.Header.TargetChannel = strings.Split(h, "=")[1]
+					enclosure.Header.TargetChannel = strings.Split(h, "TargetChannel=")[1]
 				case "PostURI":
-					//			header.PostURI = strings.Split(h, "=")[1:]
+					u := syndieuri.URI{}
+					u.Marshall(strings.Split(h, "PostURI=")[1])
+					enclosure.Header.PostURI = u
 				case "References":
-					//			header.References = strings.Split(h, "=")[1:]
+					var out []syndieuri.URI
+					r := strings.Split(h, "References=")[1:]
+					for _, ref := range r {
+						u := syndieuri.URI{}
+						u.Marshall(ref)
+						out = append(out, u)
+					}
+					enclosure.Header.References = out
 				case "Tags":
-					enclosure.Header.Tags = strings.Split(h, "=")[1:]
+					enclosure.Header.Tags = strings.Split(h, "Tags=")[1:]
 				case "OverwriteURI":
-					//			header.OverwriteURI = strings.Split(h, "=")[1:]
+					u := syndieuri.URI{}
+					u.Marshall(strings.Split(h, "OverwriteURI=")[1])
+					enclosure.Header.OverwriteURI = u
 				case "ForceNewThread":
-					if strings.Contains(strings.Split(h, "=")[1], "true") {
+					if strings.Contains(strings.Split(h, "ForceNewThread=")[1], "true") {
 						enclosure.Header.ForceNewThread = true
 					}
 				case "RefuseReplies":
-					if strings.Contains(strings.Split(h, "=")[1], "true") {
+					if strings.Contains(strings.Split(h, "RefuseReplies=")[1], "true") {
 						enclosure.Header.RefuseReplies = true
 					}
 				case "Cancel":
-					//			header.Cancel = strings.Split(h, "=")[1:]
+					var out []syndieuri.URI
+					r := strings.Split(h, "Cancel=")[1:]
+					for _, canc := range r {
+						u := syndieuri.URI{}
+						u.Marshall(canc)
+						out = append(out, u)
+					}
+					enclosure.Header.Cancel = out
 				case "Subject":
-					enclosure.Header.Subject = strings.Split(h, "=")[1]
+					enclosure.Header.Subject = strings.Split(h, "Subject=")[1]
 				case "BodyKey":
-					enclosure.Header.BodyKey = strings.Split(h, "=")[1]
+					enclosure.Header.BodyKey = strings.Split(h, "BodyKey=")[1]
 				case "BodyKeyPromptSalt":
-					enclosure.Header.BodyKeyPromptSalt = strings.Split(h, "=")[1]
+					enclosure.Header.BodyKeyPromptSalt = strings.Split(h, "BodyKeyPromptSalt=")[1]
 				case "BodyKeyPrompt":
-					enclosure.Header.BodyKeyPrompt = strings.Split(h, "=")[1]
+					enclosure.Header.BodyKeyPrompt = strings.Split(h, "BodyKeyPrompt=")[1]
 				case "Identity":
-					enclosure.Header.Identity = strings.Split(h, "=")[1]
+					enclosure.Header.Identity = strings.Split(h, "Identity=")[1]
 				case "EncryptKey":
-					enclosure.Header.EncryptKey = strings.Split(h, "=")[1]
+					enclosure.Header.EncryptKey = strings.Split(h, "EncryptKey=")[1]
 				case "Name":
-					enclosure.Header.Name = strings.Split(h, "=")[1]
+					enclosure.Header.Name = strings.Split(h, "Name=")[1]
 				case "Description":
-					enclosure.Header.Description = strings.Split(h, "=")[1]
+					enclosure.Header.Description = strings.Split(h, "Description=")[1]
 				case "Edition":
 					i, err := strconv.Atoi(strings.TrimRight(strings.Split(h, "=")[1], "\n"))
 					if err != nil {
@@ -96,23 +115,30 @@ func (enclosure *Enclosure) OpenFile(s string) *Enclosure {
 					}
 					enclosure.Header.Edition = i
 				case "PublicPosting":
-					if strings.Contains(strings.Split(h, "=")[1], "true") {
+					if strings.Contains(strings.Split(h, "PublicPosting=")[1], "true") {
 						enclosure.Header.PublicPosting = true
 					}
 				case "PublicReplies":
-					if strings.Contains(strings.Split(h, "=")[1], "true") {
+					if strings.Contains(strings.Split(h, "PublicReplies=")[1], "true") {
 						enclosure.Header.PublicReplies = true
 					}
 				case "AuthorizedKeys":
-					enclosure.Header.AuthorizedKeys = strings.Split(h, "=")[1:]
+					enclosure.Header.AuthorizedKeys = strings.Split(h, "AuthorizedKeys=")[1:]
 				case "ManagerKeys":
-					enclosure.Header.ManagerKeys = strings.Split(h, "=")[1:]
+					enclosure.Header.ManagerKeys = strings.Split(h, "ManagerKeys=")[1:]
 				case "Archives":
-					//			header.Archives = strings.Split(h, "=")[1:]
+					var out []syndieuri.URI
+					r := strings.Split(h, "Archives=")[1:]
+					for _, arch := range r {
+						u := syndieuri.URI{}
+						u.Marshall(arch)
+						out = append(out, u)
+					}
+					enclosure.Header.Archives = out
 				case "ChannelReadKeys":
-					enclosure.Header.ChannelReadKeys = strings.Split(h, "=")[1:]
+					enclosure.Header.ChannelReadKeys = strings.Split(h, "ChannelReadKeys=")[1:]
 				case "Expiration":
-					enclosure.Header.Expiration = strings.Split(h, "=")[1]
+					enclosure.Header.Expiration = strings.Split(h, "Expiration=")[1]
 				}
 			}
 		} else {
