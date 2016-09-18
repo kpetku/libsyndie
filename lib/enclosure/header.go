@@ -1,4 +1,8 @@
-package main
+package enclosure
+
+import (
+	"github.com/kpetku/go-syndie/lib/syndieuri"
+)
 
 // SyndieHeader holds a Syndie header that contains version and pairs fields:
 /*
@@ -11,13 +15,13 @@ type SyndieHeader struct {
 	Author             string
 	AuthenticationMask string
 	TargetChannel      string
-	PostURI            URI
-	References         []URI
+	PostURI            syndieuri.URI
+	References         []syndieuri.URI
 	Tags               []string
-	OverwriteURI       URI
+	OverwriteURI       syndieuri.URI
 	ForceNewThread     bool
 	RefuseReplies      bool
-	Cancel             []URI
+	Cancel             []syndieuri.URI
 	Subject            string
 	BodyKey            string
 	BodyKeyPromptSalt  string
@@ -31,7 +35,7 @@ type SyndieHeader struct {
 	PublicReplies      bool
 	AuthorizedKeys     []string
 	ManagerKeys        []string
-	Archives           []URI
+	Archives           []syndieuri.URI
 	ChannelReadKeys    []string
 	Expiration         string
 }

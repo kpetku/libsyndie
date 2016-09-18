@@ -4,10 +4,11 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/kpetku/go-syndie/lib/enclosure"
 )
 
 func main() {
 	log.Printf("go-syndie: startup.")
-	payload := SyndiePayload{}
-	payload.OpenFile(os.Args[1])
+	e := enclosure.Enclosure{Header: &enclosure.SyndieHeader{}, Message: &enclosure.SyndieTrailer{}}
+	e.OpenFile(os.Args[1])
 }

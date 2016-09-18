@@ -1,4 +1,4 @@
-package main
+package common
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
 var I2PEncoding *base64.Encoding = base64.NewEncoding(alphabet)
 
 // newlineDelimiter returns data for a scanner delimited by \n\n
-func newlineDelimiter(data []byte, atEOF bool) (advance int, token []byte, err error) {
+func NewlineDelimiter(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	if atEOF && len(data) == 0 {
 		return 0, nil, nil
 	}

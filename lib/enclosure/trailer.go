@@ -1,4 +1,4 @@
-package main
+package enclosure
 
 import (
 	"crypto/aes"
@@ -6,29 +6,29 @@ import (
 	"encoding/binary"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/kpetku/go-syndie/lib/common"
 )
 
 // SyndieTrailer contains a Syndie trailer that contains version and pairs fields
 type SyndieTrailer struct {
 	size              int
-	body              []byte
+	raw               []byte
 	authorizationSig  string
 	authenticationSig string
 }
 
-// MessagePayload holds the following: rand(nonzero) padding + 0 + internalSize + totalSize + data + rand
-type MessagePayload struct {
+// SyndieTrailerPayload holds the following: rand(nonzero) padding + 0 + internalSize + totalSize + data + rand
+type SyndieTrailerPayload struct {
 	internalSize int
 	totalSize    int
 	decrypted    []byte
 }
 
 // DecryptAES decrypts a SyndieTrailer into a messagePayload
-func (trailer *SyndieTrailer) DecryptAES(key string) MessagePayload {
+func (trailer *SyndieTrailer) DecryptAES(key string) SyndieTrailerPayload {
 	var found bool
-
-	inner := MessagePayload{}
-	k, err := I2PEncoding.DecodeString(key)
+	inner := SyndieTrailerPayload{}
+	k, err := common.I2PEncoding.DecodeString(key)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"at":     "(trailer) DecryptAES, DecodeString",
@@ -45,9 +45,9 @@ func (trailer *SyndieTrailer) DecryptAES(key string) MessagePayload {
 			"reason": "invalid block AES cipher",
 		}).Fatalf("%s", err)
 	}
-	decrypter := cipher.NewCBCDecrypter(block, trailer.body[:16])
-	decrypted := make([]byte, len(trailer.body[:trailer.size]))
-	decrypter.CryptBlocks(decrypted, trailer.body[:trailer.size])
+	decrypter := cipher.NewCBCDecrypter(block, trailer.raw[:16])
+	decrypted := make([]byte, len(trailer.raw[:trailer.size]))
+	decrypter.CryptBlocks(decrypted, trailer.raw[:trailer.size])
 	for i := range decrypted {
 		if !found && decrypted[i] == 0x0 {
 			is := int(binary.BigEndian.Uint32(decrypted[i+1 : +i+5]))
