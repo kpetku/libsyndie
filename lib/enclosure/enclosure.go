@@ -7,23 +7,24 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/kpetku/go-syndie/lib/common"
 	"github.com/kpetku/go-syndie/lib/syndieuri"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 // Enclosure holds the reference to a Syndie Header and Message
 type Enclosure struct {
-	Header          *SyndieHeader
-	Message         *SyndieTrailer
-	isAuthenticated bool
-	isAuthorized    bool
+	Header            *SyndieHeader
+	Message           *SyndieTrailer
+	AuthenticationSig string
+	AuthorizationSig  string
+	HmacPos           int
 }
 
 // OpenFile opens a file and returns a populated Enclosure
 func (enclosure *Enclosure) OpenFile(s string) *Enclosure {
-	var rest []byte
-	buf := make([]byte, 0, 64*1024)
+	var rest2 []byte
 
 	file, err := os.Open(s)
 	if err != nil {
@@ -34,9 +35,20 @@ func (enclosure *Enclosure) OpenFile(s string) *Enclosure {
 		}).Fatalf("%s", err)
 	}
 	defer file.Close()
+	stat, err := file.Stat()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"at":     "(main)",
+			"file":   s,
+			"reason": "failed stat file",
+		}).Fatalf("%s", err)
+	}
+	length := int(stat.Size())
 
+	log.Printf("File size is %d", length)
+	buf := make([]byte, 0, length)
 	scanner := bufio.NewScanner(file)
-	scanner.Buffer(buf, 1024*1024)
+	scanner.Buffer(buf, length)
 	scanner.Split(common.NewlineDelimiter)
 
 	for scanner.Scan() {
@@ -142,7 +154,18 @@ func (enclosure *Enclosure) OpenFile(s string) *Enclosure {
 				}
 			}
 		} else {
-			rest = append(rest[:], bs...)
+			if bytes.Index(bs, []byte("AuthorizationSig=")) > 0 {
+				apos := bytes.Index(bs, []byte("AuthorizationSig="))
+				sig := strings.Split(string(bs[apos:]), "AuthorizationSig=")
+				enclosure.HmacPos = apos
+				enclosure.AuthorizationSig = strings.TrimSpace(sig[1])
+			}
+			if bytes.Index(bs, []byte("AuthenticationSig=")) > 0 {
+				apos := bytes.Index(bs, []byte("AuthenticationSig="))
+				sig := strings.Split(string(bs[apos:]), "AuthenticationSig=")
+				enclosure.AuthenticationSig = strings.TrimSpace(sig[1])
+			}
+			rest2 = append(rest2[:], bs...)
 		}
 		// TODO: err out here?
 	}
@@ -153,10 +176,10 @@ func (enclosure *Enclosure) OpenFile(s string) *Enclosure {
 			"reason":           "invalid input scanned",
 		}).Fatalf("%s", err)
 	}
-	if bytes.HasPrefix(rest, []byte("Size=")) {
-		line := strings.Split(string(rest)[len("Size="):], "\n")
+	if bytes.HasPrefix(rest2, []byte("Size=")) {
+		line := strings.Split(string(rest2)[len("Size="):], "\n")
 		size, err := strconv.Atoi(line[0])
-		rest := strings.Join(line[1:], "")
+		rest := strings.Join(line[1:], "\n")
 		if err != nil {
 			log.WithFields(log.Fields{
 				"at":     "(Enclosure) MarshallTrailer",
@@ -165,8 +188,8 @@ func (enclosure *Enclosure) OpenFile(s string) *Enclosure {
 				"reason": "parsing error",
 			}).Fatalf("%s", err)
 		}
-		enclosure.Message.size = size
-		enclosure.Message.raw = []byte(rest)
+		enclosure.Message.Size = size
+		enclosure.Message.Raw = []byte(rest)
 	} else {
 		panic("Invalid trailer marshalling attempted")
 	}

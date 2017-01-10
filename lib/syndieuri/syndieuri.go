@@ -122,7 +122,7 @@ func (u *URI) Marshall(s string) *URI {
 		log.WithFields(log.Fields{
 			"at":     "(uri) Marshall",
 			"reason": "error while parsing bencode",
-		}).Fatalf("%s", berr)
+		}).Infof("%s", berr)
 		panic(err)
 	}
 	return u
