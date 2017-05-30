@@ -24,13 +24,13 @@ func ParseBody(input io.Reader, bodyKey string) error {
 
 	br := bufio.NewReader(input)
 	var realSize int
-	var e MessageHeader
+	var header MessageHeader
 
 	line, lerr := br.ReadString('\n')
 	if lerr != nil {
 		return errors.New("invalid message: " + lerr.Error())
 	}
-	// search for the magic "Syndie.Message.1." string
+	// find the magic "Syndie.Message.1." string
 	if !strings.HasPrefix(line, "Syndie.Message.1.") {
 		return errors.New("invalid message")
 	}
@@ -52,8 +52,9 @@ func ParseBody(input io.Reader, bodyKey string) error {
 			realSize = bar
 			break
 		}
-		// do things with the header line(s), just call validateHeaderLine for now
-		herr := validateHeaderLine(&e, []byte(strings.TrimSpace(line)))
+		// do things with the header line(s)
+		// just call validateHeaderLine for now
+		herr := validateHeaderLine(&header, []byte(strings.TrimSpace(line)))
 		if herr != nil {
 			return errors.New("error validating header line: " + line + " error: " + herr.Error())
 		}
