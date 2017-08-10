@@ -19,20 +19,19 @@ import (
 	"github.com/hkparker/go-i2p/lib/common/base64"
 )
 
-func ParseBody(input io.Reader, bodyKey string) error {
+func (header *Header) Unmarshal(r io.Reader) (*Message, error) {
 	var rest bytes.Buffer
 
-	br := bufio.NewReader(input)
+	br := bufio.NewReader(r)
 	var realSize int
-	var header MessageHeader
 
 	line, lerr := br.ReadString('\n')
 	if lerr != nil {
-		return errors.New("invalid message: " + lerr.Error())
+		return nil, errors.New("invalid message: " + lerr.Error())
 	}
 	// find the magic "Syndie.Message.1." string
 	if !strings.HasPrefix(line, "Syndie.Message.1.") {
-		return errors.New("invalid message")
+		return nil, errors.New("invalid message")
 	}
 	for {
 		line, err := br.ReadString('\n')
@@ -52,11 +51,10 @@ func ParseBody(input io.Reader, bodyKey string) error {
 			realSize = bar
 			break
 		}
-		// do things with the header line(s)
-		// just call validateHeaderLine for now
-		herr := validateHeaderLine(&header, []byte(strings.TrimSpace(line)))
-		if herr != nil {
-			return errors.New("error validating header line: " + line + " error: " + herr.Error())
+		// call ReadLine on each line
+		err = header.ReadLine(strings.TrimSpace(line))
+		if err != nil {
+			return nil, errors.New("error from header ReadLine: " + line + " error: " + err.Error())
 		}
 	}
 
@@ -64,12 +62,12 @@ func ParseBody(input io.Reader, bodyKey string) error {
 	var enclosed = make([]byte, realSize)
 	_, err := io.ReadFull(br, enclosed)
 	if err != nil {
-		return errors.New("error in ioReadFull: " + err.Error())
+		return nil, errors.New("error in ioReadFull: " + err.Error())
 	}
 	rest.Write(enclosed)
 
 	if len(enclosed) < 32 {
-		return errors.New("invalid message: too small for IV")
+		return nil, errors.New("invalid message: too small for IV")
 	}
 
 	decrypted := make([]byte, len(enclosed)+32)
@@ -78,15 +76,15 @@ func ParseBody(input io.Reader, bodyKey string) error {
 	iv := enclosed[0:16]
 
 	// after this point, the stuff below needs to be decrypted!
-	k, err := base64.I2PEncoding.DecodeString(bodyKey)
+	k, err := base64.I2PEncoding.DecodeString(header.BodyKey)
 
 	if err != nil {
-		return errors.New("error decoding: " + err.Error())
+		return nil, errors.New("error decoding: " + err.Error())
 	}
 
 	block, err := aes.NewCipher([]byte(k))
 	if err != nil {
-		return errors.New("error initializing NewCipher: %s" + err.Error())
+		return nil, errors.New("error initializing NewCipher: %s" + err.Error())
 	}
 
 	decrypter := cipher.NewCBCDecrypter(block, iv)
@@ -98,7 +96,7 @@ func ParseBody(input io.Reader, bodyKey string) error {
 	totalSize := binary.BigEndian.Uint32(decrypted[start+5 : start+9])
 
 	if realSize != int(totalSize)+16 {
-		return errors.New("size mismatch")
+		return nil, fmt.Errorf("size mismatch, expected: %d, found: %d", realSize, int(totalSize)+16)
 	}
 
 	zr, err := zip.NewReader(bytes.NewReader(decrypted[start+9:start+9+int(internalSize)]), int64(start+9-start+9+int(internalSize)))
@@ -108,7 +106,7 @@ func ParseBody(input io.Reader, bodyKey string) error {
 	}
 
 	// hand off the decrypted zip to ParseMessage
-	ParseMessage(zr)
+	m := header.ParseMessage(zr)
 
 	// reached the end of the body, next comes the signature area
 	authorizationSig, err := br.ReadString('\n')
@@ -142,9 +140,9 @@ func ParseBody(input io.Reader, bodyKey string) error {
 	h.Write(rest.Bytes()[16 : realSize-32])
 
 	if !hmac.Equal(h.Sum(nil), rest.Bytes()[realSize-32:realSize]) {
-		return fmt.Errorf("unable to verify HMAC")
+		return nil, fmt.Errorf("unable to verify HMAC")
 	}
-	return nil
+	return &m, nil
 }
 
 func value(s string) (string, error) {

@@ -15,7 +15,6 @@ func FetchFromDisk(path string) {
 		for _, m := range fetchMessageList {
 			if m.Name() == "meta.syndie" {
 				totalMeta++
-				log.Printf("meta detected.")
 			} else {
 				totalMsg++
 			}

@@ -5,13 +5,12 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
-
 	"github.com/kpetku/go-syndie/syndieutil"
 )
 
 func main() {
 	var arg string
-	if len(os.Args) > 0 {
+	if len(os.Args) > 1 {
 		arg = os.Args[1]
 	}
 
@@ -24,20 +23,11 @@ func main() {
 		log.Fatalf("Error while opening file %s", err)
 	}
 
-	err2 := syndieutil.ParseBody(file, *defaultKey)
-
-	if err2 != nil {
-		log.Printf("Error reading message: %s", err2.Error())
+	header := syndieutil.New(syndieutil.BodyKey(*defaultKey))
+	message, err := header.Unmarshal(file)
+	if err != nil {
+		log.Printf("Error reading message: %s", err.Error())
 	}
-
+	log.Printf("Opened message: %s", message.Page[0].Data)
 	defer file.Close()
-
-	/*
-		current, err := user.Current()
-		if err != nil {
-			log.Fatalf("Could not obtain current user")
-		}
-		syndieutil.FetchFromDisk(current.HomeDir + "/.syndie/archive/")
-	*/
-
 }
