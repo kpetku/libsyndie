@@ -4,9 +4,9 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
+	"errors"
+	"fmt"
 	"strings"
-
-	log "github.com/Sirupsen/logrus"
 )
 
 type Message struct {
@@ -30,7 +30,7 @@ type Page struct {
 	Data        string
 }
 
-func (p *Page) ReadLine(s string) {
+func (p *Page) ReadLine(s string) error {
 	if strings.Contains(s, "=") {
 		split := strings.SplitN(s, "=", 2)
 		key := string(split[0])
@@ -43,18 +43,13 @@ func (p *Page) ReadLine(s string) {
 		case "References":
 			p.References = value
 		default:
-			log.WithFields(log.Fields{
-				"at":     "(Page) ReadLine",
-				"key":    key,
-				"value":  value,
-				"header": s,
-				"reason": "encountered an unknown page cfg",
-			})
+			return errors.New("malformed page")
 		}
 	}
+	return nil
 }
 
-func (a *Attatchment) ReadLine(s string) {
+func (a *Attatchment) ReadLine(s string) error {
 	if strings.Contains(s, "=") {
 		split := strings.SplitN(s, "=", 2)
 		key := string(split[0])
@@ -67,19 +62,14 @@ func (a *Attatchment) ReadLine(s string) {
 		case "Description":
 			a.Description = value
 		default:
-			log.WithFields(log.Fields{
-				"at":     "(Attachment) ReadLine",
-				"key":    key,
-				"value":  value,
-				"header": s,
-				"reason": "encountered an unknown attachment cfg",
-			})
+			return errors.New("malformed attachment")
 		}
 	}
+	return nil
 }
 
 // ParseMessage is probably broken with multiple attachments/pages
-func (h *Header) ParseMessage(zr *zip.Reader) Message {
+func (h *Header) ParseMessage(zr *zip.Reader) (Message, error) {
 	var pagenum, attachnum int
 	m := Message{}
 	for _, file := range zr.File {
@@ -89,7 +79,8 @@ func (h *Header) ParseMessage(zr *zip.Reader) Message {
 
 		newStr := buf.String()
 		if err != nil {
-			log.Fatalf("Error opening enclosed zip file %s", err)
+			return Message{}, fmt.Errorf("Error opening enclosed zip file %s", err)
+
 		}
 		defer fileReader.Close()
 		switch file.Name {
@@ -133,5 +124,5 @@ func (h *Header) ParseMessage(zr *zip.Reader) Message {
 			attachnum++
 		}
 	}
-	return m
+	return m, nil
 }

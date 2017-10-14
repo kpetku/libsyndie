@@ -12,7 +12,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"strconv"
 	"strings"
 
@@ -102,31 +101,33 @@ func (header *Header) Unmarshal(r io.Reader) (*Message, error) {
 	zr, err := zip.NewReader(bytes.NewReader(decrypted[start+9:start+9+int(internalSize)]), int64(start+9-start+9+int(internalSize)))
 
 	if err != nil {
-		panic("error")
+		return nil, err
 	}
 
 	// hand off the decrypted zip to ParseMessage
-	m := header.ParseMessage(zr)
-
+	m, err := header.ParseMessage(zr)
+	if err != nil {
+		return nil, err
+	}
 	// reached the end of the body, next comes the signature area
 	authorizationSig, err := br.ReadString('\n')
 	rest.Write([]byte(authorizationSig))
 	if err != nil {
-		log.Printf("error reading authorizationSig: %s", err)
+		return nil, err
 	}
-	foo, err := value(authorizationSig)
-	log.Printf("authorizationSig: %s", foo)
+	//	foo, err := value(authorizationSig)
+	//	log.Printf("authorizationSig: %s", foo)
 
 	authenticationSig, err := br.ReadString('\n')
 	rest.Write([]byte(authenticationSig))
 
 	if err != nil {
-		log.Printf("error in sig readstring: %s", err)
+		return nil, err
 	}
-	bar, err := value(authenticationSig)
+	//	bar, err := value(authenticationSig)
+	//	log.Printf("authenticationSig: %s", bar)
 
 	// TODO: lots
-	log.Printf("authenticationSig: %s", bar)
 
 	// check the hmac
 	var hmacPreKey bytes.Buffer

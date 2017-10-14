@@ -3,9 +3,9 @@ package syndieutil
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/jackpal/bencode-go"
 )
 
@@ -86,29 +86,21 @@ func prepareURI(in string) (out string, err error) {
 }
 
 // Marshall takes a URI as string and returns a populated URI
-func (u *URI) Marshall(s string) *URI {
+func (u *URI) Marshall(s string) error {
 	if len(s) < 3 {
-		log.WithFields(log.Fields{
-			"at":     "(uri) Marshall",
-			"reason": "URI was too short to process",
-		}).Fatalf("URI was too short to process")
-		return &URI{}
+		return errors.New("URI was too short to process")
 	}
 	s = trimSyndieURI(s)
 	u.RefType = strings.Split(s, ":")[0]
 	prepared, err := prepareURI(s)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	r := bytes.NewReader([]byte(prepared))
 
 	berr := bencode.Unmarshal(r, &u)
 	if berr != nil {
-		log.WithFields(log.Fields{
-			"at":     "(uri) Marshall",
-			"reason": "error while parsing bencode",
-		}).Infof("%s", berr)
-		panic(err)
+		return fmt.Errorf("error while parsing bencode: %s", berr)
 	}
-	return u
+	return nil
 }

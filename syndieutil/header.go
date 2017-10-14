@@ -2,10 +2,9 @@ package syndieutil
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
-
-	log "github.com/Sirupsen/logrus"
 )
 
 // Header holds a Syndie message header that contains version and pairs fields
@@ -107,14 +106,7 @@ func (h *Header) ReadLine(s string) error {
 		case "Edition":
 			i, err := strconv.Atoi(value)
 			if err != nil {
-				log.WithFields(log.Fields{
-					"at":     "(Header) ReadLine strconv",
-					"key":    key,
-					"value":  value,
-					"header": s,
-					"i":      i,
-					"reason": "conversion error",
-				}).Fatalf("%s", err)
+				return fmt.Errorf("conversion error: %s", err)
 			}
 			h.Set(Edition(i))
 		case "PublicPosting":
@@ -134,21 +126,10 @@ func (h *Header) ReadLine(s string) error {
 		// TODO: wrong place for MessageType?
 		case "Syndie.MessageType":
 		default:
-			log.WithFields(log.Fields{
-				"at":     "(Header) parseHeader",
-				"key":    key,
-				"value":  value,
-				"header": s,
-				"reason": "encountered an unknown header",
-			})
+			return errors.New("unknown header")
 		}
 		return nil
 	}
-	log.WithFields(log.Fields{
-		"at":     "(Header) parseHeader",
-		"header": s,
-		"reason": "malformed header",
-	})
 	return errors.New("malformed header")
 }
 

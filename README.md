@@ -6,5 +6,4 @@ Dependencies:
 * http://github.com/jackpal/bencode-go
 
 TODO:
-* Get rid of logging in this package
 * Rename to libsyndie or something similar
