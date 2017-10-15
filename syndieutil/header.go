@@ -36,6 +36,7 @@ type Header struct {
 	Archives           []URI
 	ChannelReadKeys    []string
 	Expiration         string
+	MessageType        string
 }
 
 // New creates a new Header and accepts a list of option functions
@@ -123,8 +124,8 @@ func (h *Header) ReadLine(s string) error {
 			h.Set(ChannelReadKeys(parseSliceString(value)))
 		case "Expiration":
 			h.Set(Expiration(value))
-		// TODO: wrong place for MessageType?
 		case "Syndie.MessageType":
+			h.Set(MessageType(value))
 		default:
 			return errors.New("unknown header")
 		}
@@ -312,6 +313,13 @@ func ChannelReadKeys(channelreadkeys []string) func(*Header) {
 func Expiration(expiration string) func(*Header) {
 	return func(h *Header) {
 		h.Expiration = expiration
+	}
+}
+
+// MessageType is an optional function of Header
+func MessageType(messagetype string) func(*Header) {
+	return func(h *Header) {
+		h.MessageType = messagetype
 	}
 }
 
