@@ -65,11 +65,11 @@ func (header *Header) Unmarshal(r io.Reader) (*Message, error) {
 	}
 	rest.Write(enclosed)
 
-	if len(enclosed) < 32 {
+	if len(enclosed) < aes.BlockSize {
 		return nil, errors.New("invalid message: too small for IV")
 	}
 
-	decrypted := make([]byte, len(enclosed)+32)
+	decrypted := make([]byte, len(enclosed)+aes.BlockSize)
 
 	// taken from the raw, encrypted enclosed message
 	iv := enclosed[0:16]
@@ -85,7 +85,9 @@ func (header *Header) Unmarshal(r io.Reader) (*Message, error) {
 	if err != nil {
 		return nil, errors.New("error initializing NewCipher: %s" + err.Error())
 	}
-
+	if len(enclosed[16:realSize])%aes.BlockSize != 0 {
+		return nil, errors.New("ciphertext is not a multiple of the block size")
+	}
 	decrypter := cipher.NewCBCDecrypter(block, iv)
 	decrypter.CryptBlocks(decrypted, enclosed[16:realSize])
 
