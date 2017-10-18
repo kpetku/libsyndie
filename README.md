@@ -7,3 +7,5 @@ Dependencies:
 
 TODO:
 * Rename to libsyndie or something similar
+* Break URI into individual types
+* Lots of renaming

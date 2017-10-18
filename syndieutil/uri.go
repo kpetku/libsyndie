@@ -14,46 +14,46 @@ URI defines the URIs safely passable within syndie, capable of referencing speci
 They contain one of four reference types, plus a bencoded set of attributes:
 */
 type URI struct {
-	RefType     string
-	Name        string   `bencode:",omitempty"`
-	Desc        string   `bencode:",omitempty"`
-	Tag         []string `bencode:",omitempty"`
-	Author      string   `bencode:",omitempty"`
-	Net         string   `bencode:",omitempty"`
-	ReadKeyType string   `bencode:",omitempty"`
-	ReadKeyData string   `bencode:",omitempty"`
-	PostKeyType string   `bencode:",omitempty"`
-	PostKeyData string   `bencode:",omitempty"`
-	URL         string   `bencode:",omitempty"`
-	Channel     string   `bencode:",omitempty"`
-	MessageID   int      `bencode:",omitempty"`
-	Page        int      `bencode:",omitempty"`
-	Attachment  int      `bencode:",omitempty"`
-	Scope       []string `bencode:",omitempty"`
-	PostByScope []string `bencode:",omitempty"`
-	Age         int      `bencode:",omitempty"`
-	AgeLocal    int      `bencode:",omitempty"`
-	UnreadOnly  bool     `bencode:",omitempty"`
-	TagInclude  []string `bencode:",omitempty"`
-	TagRequire  []string `bencode:",omitempty"`
-	TagExclude  []string `bencode:",omitempty"`
-	TagMessages bool     `bencode:",omitempty"`
-	PageMin     int      `bencode:",omitempty"`
-	PageMax     int      `bencode:",omitempty"`
-	AttachMin   int      `bencode:",omitempty"`
-	AttachMax   int      `bencode:",omitempty"`
-	RefMin      int      `bencode:",omitempty"`
-	RefMax      int      `bencode:",omitempty"`
-	KeyMin      int      `bencode:",omitempty"`
-	KeyMax      int      `bencode:",omitempty"`
-	Encrypted   bool     `bencode:",omitempty"`
-	PBE         bool     `bencode:",omitempty"`
-	Private     bool     `bencode:",omitempty"`
-	Public      bool     `bencode:",omitempty"`
-	Authorized  bool     `bencode:",omitempty"`
-	Threaded    bool     `bencode:",omitempty"`
-	Keyword     string   `bencode:",omitempty"`
-	Body        string   `bencode:",omitempty"`
+	RefType     string   `bencode:"-"`
+	Name        string   `bencode:"name,omitempty"`
+	Desc        string   `bencode:"desc,omitempty"`
+	Tag         []string `bencode:"tag,omitempty"`
+	Author      string   `bencode:"author,omitempty"`
+	Net         string   `bencode:"net,omitempty"`
+	ReadKeyType string   `bencode:"readKeyType,omitempty"`
+	ReadKeyData string   `bencode:"readKeyData,omitempty"`
+	PostKeyType string   `bencode:"postKeyType,omitempty"`
+	PostKeyData string   `bencode:"postKeyData,omitempty"`
+	URL         string   `bencode:"url,omitempty"`
+	Channel     string   `bencode:"channel,omitempty"`
+	MessageID   int      `bencode:"messageId,omitempty"`
+	Page        int      `bencode:"page,omitempty"`
+	Attachment  int      `bencode:"attatchment,omitempty"`
+	Scope       []string `bencode:"scope,omitempty"`
+	PostByScope []string `bencode:"postbyscope,omitempty"`
+	Age         int      `bencode:"age,omitempty"`
+	AgeLocal    int      `bencode:"agelocal,omitempty"`
+	UnreadOnly  bool     `bencode:"unreadonly,omitempty"`
+	TagInclude  []string `bencode:"taginclude,omitempty"`
+	TagRequire  []string `bencode:"tagrequire,omitempty"`
+	TagExclude  []string `bencode:"tagexclude,omitempty"`
+	TagMessages bool     `bencode:"tagmessages,omitempty"`
+	PageMin     int      `bencode:"pagemin,omitempty"`
+	PageMax     int      `bencode:"pagemax,omitempty"`
+	AttachMin   int      `bencode:"attachmin,omitempty"`
+	AttachMax   int      `bencode:"attachmax,omitempty"`
+	RefMin      int      `bencode:"refmin,omitempty"`
+	RefMax      int      `bencode:"refmax,omitempty"`
+	KeyMin      int      `bencode:"keymin,omitempty"`
+	KeyMax      int      `bencode:"keymax,omitempty"`
+	Encrypted   bool     `bencode:"encrypted,omitempty"`
+	PBE         bool     `bencode:"pbe,omitempty"`
+	Private     bool     `bencode:"private,omitempty"`
+	Public      bool     `bencode:"public,omitempty"`
+	Authorized  bool     `bencode:"authorized,omitempty"`
+	Threaded    bool     `bencode:"threaded,omitempty"`
+	Keyword     string   `bencode:"keyword,omitempty"`
+	Body        string   `bencode:"body,omitempty"`
 }
 
 // trimSyndieURI trims "urn:", "urn:syndie", and "syndie:" from the left of a string
@@ -90,7 +90,6 @@ func (u *URI) Marshall(s string) error {
 	if len(s) < 3 {
 		return errors.New("URI was too short to process")
 	}
-	s = trimSyndieURI(s)
 	u.RefType = strings.Split(s, ":")[0]
 	prepared, err := prepareURI(s)
 	if err != nil {
@@ -103,4 +102,11 @@ func (u *URI) Marshall(s string) error {
 		return fmt.Errorf("error while parsing bencode: %s", berr)
 	}
 	return nil
+}
+func (u *URI) String() string {
+	var buf []byte
+	w := bytes.NewBuffer(buf)
+	bencode.Marshal(w, *u)
+	out, _ := prepareURI(w.String())
+	return "urn:syndie:" + u.RefType + ":" + out
 }
