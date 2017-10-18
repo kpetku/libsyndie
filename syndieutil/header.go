@@ -33,7 +33,7 @@ type Header struct {
 	PublicReplies      bool
 	AuthorizedKeys     []string
 	ManagerKeys        []string
-	Archives           []URI
+	Archives           string
 	ChannelReadKeys    []string
 	Expiration         string
 	MessageType        string
@@ -119,7 +119,7 @@ func (h *Header) ReadLine(s string) error {
 		case "ManagerKeys":
 			h.Set(ManagerKeys(parseSliceString(value)))
 		case "Archives":
-			h.Set(Archives(parseSliceURI(value)))
+			h.Set(Archives(value))
 		case "ChannelReadKeys":
 			h.Set(ChannelReadKeys(parseSliceString(value)))
 		case "Expiration":
@@ -296,7 +296,7 @@ func ManagerKeys(managerkeys []string) func(*Header) {
 }
 
 // Archives is an optional function of Header
-func Archives(archives []URI) func(*Header) {
+func Archives(archives string) func(*Header) {
 	return func(h *Header) {
 		h.Archives = archives
 	}
