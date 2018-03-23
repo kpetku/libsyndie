@@ -18,6 +18,9 @@ import (
 	"github.com/hkparker/go-i2p/lib/common/base64"
 )
 
+const syndieMessage = "Syndie.Message.1."
+const invalidMessage = "invalid message"
+
 func (header *Header) Unmarshal(r io.Reader) (*Message, error) {
 	var rest bytes.Buffer
 
@@ -26,11 +29,11 @@ func (header *Header) Unmarshal(r io.Reader) (*Message, error) {
 
 	line, lerr := br.ReadString('\n')
 	if lerr != nil {
-		return nil, errors.New("invalid message: " + lerr.Error())
+		return nil, errors.New(invalidMessage + lerr.Error())
 	}
 	// find the magic "Syndie.Message.1." string
-	if !strings.HasPrefix(line, "Syndie.Message.1.") {
-		return nil, errors.New("invalid message")
+	if !strings.HasPrefix(line, syndieMessage) {
+		return nil, errors.New(invalidMessage)
 	}
 	for {
 		line, err := br.ReadString('\n')
@@ -66,10 +69,10 @@ func (header *Header) Unmarshal(r io.Reader) (*Message, error) {
 	rest.Write(enclosed)
 
 	if len(enclosed) < aes.BlockSize {
-		return nil, errors.New("invalid message: too small for IV")
+		return nil, errors.New(invalidMessage + ": too small for IV")
 	}
 
-	decrypted := make([]byte, len(enclosed)+aes.BlockSize)
+	decrypted := make([]byte, len(enclosed)+32)
 
 	// taken from the raw, encrypted enclosed message
 	iv := enclosed[0:16]
@@ -80,7 +83,6 @@ func (header *Header) Unmarshal(r io.Reader) (*Message, error) {
 	if err != nil {
 		return nil, errors.New("error decoding: " + err.Error())
 	}
-
 	block, err := aes.NewCipher([]byte(k))
 	if err != nil {
 		return nil, errors.New("error initializing NewCipher: %s" + err.Error())

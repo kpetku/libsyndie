@@ -34,7 +34,7 @@ type Header struct {
 	AuthorizedKeys     []string
 	ManagerKeys        []string
 	Archives           string
-	ChannelReadKeys    []string
+	ChannelReadKeys    string
 	Expiration         string
 	MessageType        string
 }
@@ -66,7 +66,7 @@ func (h *Header) ReadLine(s string) error {
 	if strings.Contains(s, "=") {
 		split := strings.SplitN(s, "=", 2)
 		key := string(split[0])
-		value := string(split[1])
+		value := strings.Join(split[1:], " ")
 		switch key {
 		case "Author":
 			h.Set(Author(value))
@@ -121,7 +121,7 @@ func (h *Header) ReadLine(s string) error {
 		case "Archives":
 			h.Set(Archives(value))
 		case "ChannelReadKeys":
-			h.Set(ChannelReadKeys(parseSliceString(value)))
+			h.Set(ChannelReadKeys(value))
 		case "Expiration":
 			h.Set(Expiration(value))
 		case "Syndie.MessageType":
@@ -303,7 +303,7 @@ func Archives(archives string) func(*Header) {
 }
 
 // ChannelReadKeys is an optional function of Header
-func ChannelReadKeys(channelreadkeys []string) func(*Header) {
+func ChannelReadKeys(channelreadkeys string) func(*Header) {
 	return func(h *Header) {
 		h.ChannelReadKeys = channelreadkeys
 	}
