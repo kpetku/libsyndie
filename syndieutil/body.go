@@ -35,6 +35,7 @@ func (header *Header) Unmarshal(r io.Reader) (*Message, error) {
 	if !strings.HasPrefix(line, syndieMessage) {
 		return nil, errors.New(invalidMessage)
 	}
+	// TODO: use a Scanner() instead of ReadString
 	for {
 		line, err := br.ReadString('\n')
 		if err != nil {
@@ -119,8 +120,6 @@ func (header *Header) Unmarshal(r io.Reader) (*Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	//	foo, err := value(authorizationSig)
-	//	log.Printf("authorizationSig: %s", foo)
 
 	authenticationSig, err := br.ReadString('\n')
 	rest.Write([]byte(authenticationSig))
@@ -128,10 +127,6 @@ func (header *Header) Unmarshal(r io.Reader) (*Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	//	bar, err := value(authenticationSig)
-	//	log.Printf("authenticationSig: %s", bar)
-
-	// TODO: lots
 
 	// check the hmac
 	var hmacPreKey bytes.Buffer
