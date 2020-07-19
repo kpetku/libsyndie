@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/hkparker/go-i2p/lib/common/base64"
-	"github.com/kpetku/go-syndie/archive"
+	"github.com/kpetku/libsyndie/archive"
 )
 
 const upperBoundLimit = 10000
