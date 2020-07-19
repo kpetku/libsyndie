@@ -1,4 +1,4 @@
-# go-syndie
+# libsyndie
 Major WIP, not much to see here.  Expect major refactoring and breaking changes.
 
 Dependencies:
@@ -6,6 +6,5 @@ Dependencies:
 * http://github.com/hkparker/go-i2p
 
 TODO:
-* Rename to libsyndie or something similar
 * Break URI into individual types
 * Lots of renaming
