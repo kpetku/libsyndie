@@ -3,7 +3,7 @@ package syndieutil
 import (
 	"crypto/sha256"
 
-	"github.com/hkparker/go-i2p/lib/common/base64"
+	"github.com/go-i2p/go-i2p/lib/common/base64"
 )
 
 func ShortIdent(i string) string {

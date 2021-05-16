@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hkparker/go-i2p/lib/common/base64"
+	"github.com/go-i2p/go-i2p/lib/common/base64"
 )
 
 const syndieMessage = "Syndie.Message.1."

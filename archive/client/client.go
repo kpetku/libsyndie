@@ -6,7 +6,7 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/hkparker/go-i2p/lib/common/base64"
+	"github.com/go-i2p/go-i2p/lib/common/base64"
 	"github.com/kpetku/libsyndie/archive"
 )
 
