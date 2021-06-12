@@ -1,6 +1,8 @@
 package syndieutil
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -37,7 +39,34 @@ type Header struct {
 	ChannelReadKeys    string
 	Expiration         string
 	MessageType        string
+
+	reader              *bufio.Reader
+	state               state
+	err                 error
+	iv                  []byte
+	enclosedReader      *bytes.Reader
+	encryptedPayload    []byte
+	totalPayloadSize    int
+	internalPayloadSize int
+	msg                 *Message
+	signature           []byte
 }
+
+type state int
+
+const (
+	readMagicVersionLine state = iota
+	readHeaderKeyPairs
+	readSizeLine
+	readIV
+	decrypt
+	readInternalPayloadSize
+	readInternalTotalSize
+	readZippedPayload
+	readSignature
+	verifyHMAC
+	invalid
+)
 
 // New creates a new Header and accepts a list of option functions
 func New(opts ...func(*Header)) *Header {
@@ -341,10 +370,7 @@ func parseSingleURI(value string) URI {
 }
 
 func parseBool(value string) bool {
-	if value == "true" {
-		return true
-	}
-	return false
+	return value == "true"
 }
 func parseSliceString(value string) []string {
 	return strings.Fields(value)

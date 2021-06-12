@@ -2,6 +2,10 @@ package syndieutil
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
+	"fmt"
+	"io"
+	"strings"
 
 	"github.com/go-i2p/go-i2p/lib/common/base64"
 )
@@ -24,4 +28,18 @@ func ChanHash(s string) (string, error) {
 		return "", err
 	}
 	return base64.I2PEncoding.EncodeToString(foo.Sum(nil)), nil
+}
+
+func readInt(r io.Reader) int {
+	buf := make([]byte, 4)
+	io.ReadFull(r, buf)
+	internalSize := binary.BigEndian.Uint32(buf)
+	return int(internalSize)
+}
+
+func value(s string) (string, error) {
+	if strings.Contains(s, "=") {
+		return strings.Join(strings.SplitAfter(strings.TrimSpace(s), "=")[1:], ""), nil
+	}
+	return "", fmt.Errorf("invalid string: %s", s)
 }

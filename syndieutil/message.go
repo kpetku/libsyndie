@@ -61,11 +61,11 @@ func (h *Header) ParseMessage(zr *zip.Reader) (Message, error) {
 	for _, file := range zr.File {
 		fileReader, err := file.Open()
 		if err != nil {
-			return Message{}, fmt.Errorf("Error opening enclosed zip file %s", err)
+			return Message{}, fmt.Errorf("error opening enclosed zip file %s", err)
 		}
 		contents, err := ioutil.ReadAll(fileReader)
 		if err != nil {
-			return Message{}, fmt.Errorf("Error reading from enclosed zip file %s", err)
+			return Message{}, fmt.Errorf("error reading from enclosed zip file %s", err)
 		}
 		defer fileReader.Close()
 		switch file.Name {
