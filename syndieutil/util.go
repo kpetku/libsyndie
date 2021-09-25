@@ -10,6 +10,8 @@ import (
 	"github.com/go-i2p/go-i2p/lib/common/base64"
 )
 
+const newLine string = "\n"
+
 func ShortIdent(i string) string {
 	if len(i) > 6 {
 		return "[" + i[0:6] + "]"
