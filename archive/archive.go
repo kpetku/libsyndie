@@ -1,5 +1,12 @@
 package archive
 
+type Archive struct {
+	ChannelHashes []ChannelHash
+	Messages      []Message
+	Urls          []string
+	Header
+}
+
 type Header struct {
 	ArchiveFlags uint16
 	AdminChannel uint32

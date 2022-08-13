@@ -1,4 +1,4 @@
-package client
+package archive
 
 import (
 	"encoding/binary"
@@ -7,17 +7,13 @@ import (
 	"strconv"
 
 	"github.com/go-i2p/go-i2p/lib/common/base64"
-	"github.com/kpetku/libsyndie/archive"
 )
 
 const upperBoundLimit = 10000
 const invalidArchiveServer = "invalid syndie archive server"
 
 type Client struct {
-	ChannelHashes []archive.ChannelHash
-	Messages      []archive.Message
-	Urls          []string
-	archive.Header
+	*Archive
 }
 
 type reader struct {
@@ -31,7 +27,7 @@ func (r *reader) read(data interface{}) {
 	}
 }
 
-func New() *Client {
+func NewClient() *Client {
 	return &Client{}
 }
 
@@ -72,7 +68,7 @@ func (c *Client) Parse(input io.Reader) error {
 
 	// Read the channel hashes
 	for i := 0; i < int(c.NumChannels); i++ {
-		var hash archive.ChannelHash
+		var hash ChannelHash
 		r.read(&hash)
 		url = append(url, base64.I2PEncoding.EncodeToString(hash.ChannelHash[:])+"/meta.syndie")
 		c.ChannelHashes = append(c.ChannelHashes, hash)
@@ -84,7 +80,7 @@ func (c *Client) Parse(input io.Reader) error {
 	}
 
 	// Read messages and append urls
-	var message archive.Message
+	var message Message
 	for i := 0; i < int(c.NumMessages); i++ {
 		r.read(&message)
 		url = append(url, base64.I2PEncoding.EncodeToString(c.ChannelHashes[int(message.ScopeChannel)].ChannelHash[:])+"/"+strconv.Itoa(int(message.MessageID))+".syndie")
