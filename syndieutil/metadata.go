@@ -14,6 +14,7 @@ type Metadata struct {
 	EncryptKey *crypto.PrivateReplyKeypair
 	BodyKey    crypto.SessionKey
 	Edition    int
+	Name       string
 }
 
 func NewMetadata() *Metadata {
@@ -21,7 +22,8 @@ func NewMetadata() *Metadata {
 }
 
 // New creates a new metadata "channel" with new signing/reply key pairs
-func (m *Metadata) New() error {
+func (m *Metadata) New(name string) error {
+	m.Name = name
 	// Create the "BodyKey" a temporary session key for the encrypted message itself
 	sess := buildSessionKey()
 	m.BodyKey = sess
@@ -44,6 +46,7 @@ func (m *Metadata) New() error {
 
 func (m Metadata) String() string {
 	var h Header
+	h.Set(Name(m.Name))
 	h.Set(BodyKey(m.BodyKey))
 	h.Set(Identity(m.Identity.String()))
 	h.Set(Edition(m.Edition))
@@ -55,6 +58,11 @@ func (m Metadata) String() string {
 	// TODO: Version this properly
 	sb.WriteString("0")
 	sb.WriteString(newLine)
+	if h.Name != "" {
+		sb.WriteString("Name=")
+		sb.WriteString(m.Name)
+		sb.WriteString(newLine)
+	}
 	if h.BodyKey != "" {
 		sb.WriteString("BodyKey=")
 		sb.WriteString(h.BodyKey)
